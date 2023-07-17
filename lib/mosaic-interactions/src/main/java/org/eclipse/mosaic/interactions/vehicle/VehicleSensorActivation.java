@@ -35,7 +35,7 @@ public final class VehicleSensorActivation extends Interaction {
     private static final long serialVersionUID = 1L;
 
     public enum SensorType {
-        LIDAR, RADAR_FRONT, RADAR_LEFT, RADAR_RIGHT, RADAR_REAR
+        LIDAR, LIDAR_PRELAY, RADAR_FRONT, RADAR_LEFT, RADAR_RIGHT, RADAR_REAR
     }
 
     /**
