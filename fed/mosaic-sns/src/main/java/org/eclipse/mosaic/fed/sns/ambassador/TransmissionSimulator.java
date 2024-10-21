@@ -191,7 +191,7 @@ public class TransmissionSimulator {
      * Simulates geocast routing transmission.
      * (ONLY Broadcasts are implemented by now)
      * <ol>
-     * <li>Verify if configured transmission can be send using the topocast logic
+     * <li>Verify if configured transmission can be sent using the topocast logic
      * <li>determine all potential receiver nodes in the destination area
      * (including original sender due to re-broadcasting in geocast)</li>
      * <li>simulate message transmission via

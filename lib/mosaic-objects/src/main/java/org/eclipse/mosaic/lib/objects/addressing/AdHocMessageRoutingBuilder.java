@@ -87,8 +87,17 @@ public class AdHocMessageRoutingBuilder {
     }
 
     /**
+     * Creates a geo cast to an IP address derived from the name of a simulation entity using a specific {@link AdHocChannel}.
+     * @param geoArea destination circle {@link GeoCircle} or destination rectangle {@link GeoRectangle}
+     * @param receiverName specific name of the simulation entity
+     * @return MessageRouting
+     */
+    public MessageRouting geoCast(GeoArea geoArea, String receiverName) {
+        return geoCast(geoArea, IpResolver.getSingleton().nameToIp(receiverName).getAddress());
+    }
+
+    /**
      * Creates geo cast to specific IP address using a specific {@link AdHocChannel}.
-     * Note: the SNS doesn't support explicit addressing when geoCasting
      *
      * @param geoArea   destination circle {@link GeoCircle} or destination rectangle {@link GeoRectangle}
      * @param ipAddress specific ip address in byte array representation
@@ -116,7 +125,6 @@ public class AdHocMessageRoutingBuilder {
 
     /**
      * Creates a topological broadcast using a specific {@link AdHocChannel} and specific number of hops.
-     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts
      *
      * @param hops number of hops
      * @return MessageRouting
@@ -127,8 +135,6 @@ public class AdHocMessageRoutingBuilder {
 
     /**
      * Creates a topological cast using a specific destination host name, a specific {@link AdHocChannel} and specific number of hops.
-     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts, so if receiver can't be reached, within
-     * one hop transmission will fail.
      *
      * @param receiverName destination host name
      * @param hops         number of hops
@@ -140,8 +146,6 @@ public class AdHocMessageRoutingBuilder {
 
     /**
      * Creates a topological cast using a specific destination IP address, a specific {@link AdHocChannel} and specific number of hops.
-     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts, so if receiver can't be reached, within
-     * one hop transmission will fail.
      *
      * @param ipAddress destination IP address
      * @param hops      number of hops
