@@ -19,9 +19,7 @@ import org.eclipse.mosaic.lib.enums.AdHocChannel;
 import org.eclipse.mosaic.lib.enums.DestinationType;
 import org.eclipse.mosaic.lib.enums.ProtocolType;
 import org.eclipse.mosaic.lib.geo.GeoArea;
-import org.eclipse.mosaic.lib.geo.GeoCircle;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
-import org.eclipse.mosaic.lib.geo.GeoRectangle;
 import org.eclipse.mosaic.lib.objects.v2x.MessageRouting;
 
 import java.net.Inet4Address;
@@ -124,95 +122,6 @@ public class AdHocMessageRoutingBuilder {
                 ProtocolType.UDP
         ));
     }
-
-//    /**
-//     * Creates geo broadcast to destination area.
-//     *
-//     * @param geoArea destination circle {@link GeoCircle} or destination rectangle {@link GeoRectangle}
-//     * @return MessageRouting
-//     */
-//    public MessageRouting geoBroadCast(GeoArea geoArea) {
-//        return build(new DestinationAddressContainer(
-//                DestinationType.AD_HOC_GEOCAST,
-//                new NetworkAddress(NetworkAddress.BROADCAST_ADDRESS),
-//                channel,
-//                null,
-//                geoArea,
-//                ProtocolType.UDP
-//        ));
-//    }
-//
-//    /**
-//     * Creates geo cast to specific IP address using a specific {@link AdHocChannel}.
-//     * Note: the SNS doesn't support explicit addressing when geoCasting
-//     *
-//     * @param geoArea   destination circle {@link GeoCircle} or destination rectangle {@link GeoRectangle}
-//     * @param ipAddress specific ip address in byte array representation
-//     * @return MessageRouting
-//     */
-//    public MessageRouting geoCast(GeoArea geoArea, byte[] ipAddress) {
-//        return build(new DestinationAddressContainer(
-//                DestinationType.AD_HOC_GEOCAST,
-//                new NetworkAddress(ipAddress),
-//                channel,
-//                null,
-//                geoArea,
-//                ProtocolType.UDP
-//        ));
-//    }
-//
-//    /**
-//     * Creates a topological broadcast using {@link AdHocChannel} SCH1 and single hop.
-//     *
-//     * @return MessageRouting
-//     */
-//    public MessageRouting topoBroadCast() {
-//        return topoCast(NetworkAddress.BROADCAST_ADDRESS.getAddress(), 1);
-//    }
-//
-//    /**
-//     * Creates a topological broadcast using a specific {@link AdHocChannel} and specific number of hops.
-//     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts
-//     *
-//     * @param hops number of hops
-//     * @return MessageRouting
-//     */
-//    public MessageRouting topoBroadCast(int hops) {
-//        return topoCast(NetworkAddress.BROADCAST_ADDRESS.getAddress(), hops);
-//    }
-//
-//    /**
-//     * Creates a topological cast using a specific destination host name, a specific {@link AdHocChannel} and specific number of hops.
-//     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts, so if receiver can't be reached, within
-//     * one hop transmission will fail.
-//     *
-//     * @param receiverName destination host name
-//     * @param hops         number of hops
-//     * @return MessageRouting
-//     */
-//    public MessageRouting topoCast(String receiverName, int hops) {
-//        return topoCast(IpResolver.getSingleton().nameToIp(receiverName).getAddress(), hops);
-//    }
-//
-//    /**
-//     * Creates a topological cast using a specific destination IP address, a specific {@link AdHocChannel} and specific number of hops.
-//     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts, so if receiver can't be reached, within
-//     * one hop transmission will fail.
-//     *
-//     * @param ipAddress destination IP address
-//     * @param hops      number of hops
-//     * @return MessageRouting
-//     */
-//    public MessageRouting topoCast(byte[] ipAddress, int hops) {
-//        return build(new DestinationAddressContainer(
-//                DestinationType.AD_HOC_TOPOCAST,
-//                new NetworkAddress(ipAddress),
-//                channel,
-//                require8BitTtl(hops),
-//                null,
-//                ProtocolType.UDP
-//        ));
-//    }
 
     /**
      * The maximum time to live (TTL).
