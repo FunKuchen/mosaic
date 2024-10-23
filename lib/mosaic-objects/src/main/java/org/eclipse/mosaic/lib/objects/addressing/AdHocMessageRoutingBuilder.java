@@ -34,6 +34,7 @@ public class AdHocMessageRoutingBuilder {
 
     private final SourceAddressContainer sourceAddressContainer;
     private AdHocChannel channel = AdHocChannel.CCH;
+    private NetworkAddress destination;
 
     /**
      * The constructor for {@link AdHocMessageRoutingBuilder}.
@@ -69,94 +70,149 @@ public class AdHocMessageRoutingBuilder {
         return this;
     }
 
-    /**
-     * Creates geo broadcast to destination area.
-     *
-     * @param geoArea destination circle {@link GeoCircle} or destination rectangle {@link GeoRectangle}
-     * @return MessageRouting
-     */
-    public MessageRouting geoBroadCast(GeoArea geoArea) {
-        return build(new DestinationAddressContainer(
-                DestinationType.AD_HOC_GEOCAST,
-                new NetworkAddress(NetworkAddress.BROADCAST_ADDRESS),
-                channel,
-                null,
-                geoArea,
-                ProtocolType.UDP
-        ));
+    public AdHocMessageRoutingBuilder destination(byte[] ipAddress) {
+        this.destination = new NetworkAddress(ipAddress);
+        return this;
     }
 
-    /**
-     * Creates geo cast to specific IP address using a specific {@link AdHocChannel}.
-     * Note: the SNS doesn't support explicit addressing when geoCasting
-     *
-     * @param geoArea   destination circle {@link GeoCircle} or destination rectangle {@link GeoRectangle}
-     * @param ipAddress specific ip address in byte array representation
-     * @return MessageRouting
-     */
-    public MessageRouting geoCast(GeoArea geoArea, byte[] ipAddress) {
-        return build(new DestinationAddressContainer(
-                DestinationType.AD_HOC_GEOCAST,
-                new NetworkAddress(ipAddress),
-                channel,
-                null,
-                geoArea,
-                ProtocolType.UDP
-        ));
+    public AdHocMessageRoutingBuilder destination(Inet4Address ipAddress) {
+        this.destination = new NetworkAddress(ipAddress);
+        return this;
     }
 
-    /**
-     * Creates a topological broadcast using {@link AdHocChannel} SCH1 and single hop.
-     *
-     * @return MessageRouting
-     */
-    public MessageRouting topoBroadCast() {
-        return topoCast(NetworkAddress.BROADCAST_ADDRESS.getAddress(), 1);
+    public AdHocMessageRoutingBuilder destination(NetworkAddress ipAddress) {
+        this.destination = ipAddress;
+        return this;
     }
 
-    /**
-     * Creates a topological broadcast using a specific {@link AdHocChannel} and specific number of hops.
-     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts
-     *
-     * @param hops number of hops
-     * @return MessageRouting
-     */
-    public MessageRouting topoBroadCast(int hops) {
-        return topoCast(NetworkAddress.BROADCAST_ADDRESS.getAddress(), hops);
+    public AdHocMessageRoutingBuilder destination(String receiverName) {
+        this.destination = new NetworkAddress(IpResolver.getSingleton().nameToIp(receiverName));
+        return this;
     }
 
-    /**
-     * Creates a topological cast using a specific destination host name, a specific {@link AdHocChannel} and specific number of hops.
-     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts, so if receiver can't be reached, within
-     * one hop transmission will fail.
-     *
-     * @param receiverName destination host name
-     * @param hops         number of hops
-     * @return MessageRouting
-     */
-    public MessageRouting topoCast(String receiverName, int hops) {
-        return topoCast(IpResolver.getSingleton().nameToIp(receiverName).getAddress(), hops);
+    public AdHocMessageRoutingBuilder broadcast() {
+        this.destination = new NetworkAddress(NetworkAddress.BROADCAST_ADDRESS);
+        return this;
     }
 
-    /**
-     * Creates a topological cast using a specific destination IP address, a specific {@link AdHocChannel} and specific number of hops.
-     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts, so if receiver can't be reached, within
-     * one hop transmission will fail.
-     *
-     * @param ipAddress destination IP address
-     * @param hops      number of hops
-     * @return MessageRouting
-     */
-    public MessageRouting topoCast(byte[] ipAddress, int hops) {
+    public MessageRouting topological(int hops) {
         return build(new DestinationAddressContainer(
                 DestinationType.AD_HOC_TOPOCAST,
-                new NetworkAddress(ipAddress),
+                destination,
                 channel,
                 require8BitTtl(hops),
                 null,
                 ProtocolType.UDP
         ));
     }
+
+    public MessageRouting topological() {
+        return topological(1);
+    }
+
+    public MessageRouting singlehop() {
+        return topological(1);
+    }
+
+    public MessageRouting geographical(GeoArea area) {
+        return build(new DestinationAddressContainer(
+                DestinationType.AD_HOC_GEOCAST,
+                destination,
+                channel,
+                null,
+                area,
+                ProtocolType.UDP
+        ));
+    }
+
+//    /**
+//     * Creates geo broadcast to destination area.
+//     *
+//     * @param geoArea destination circle {@link GeoCircle} or destination rectangle {@link GeoRectangle}
+//     * @return MessageRouting
+//     */
+//    public MessageRouting geoBroadCast(GeoArea geoArea) {
+//        return build(new DestinationAddressContainer(
+//                DestinationType.AD_HOC_GEOCAST,
+//                new NetworkAddress(NetworkAddress.BROADCAST_ADDRESS),
+//                channel,
+//                null,
+//                geoArea,
+//                ProtocolType.UDP
+//        ));
+//    }
+//
+//    /**
+//     * Creates geo cast to specific IP address using a specific {@link AdHocChannel}.
+//     * Note: the SNS doesn't support explicit addressing when geoCasting
+//     *
+//     * @param geoArea   destination circle {@link GeoCircle} or destination rectangle {@link GeoRectangle}
+//     * @param ipAddress specific ip address in byte array representation
+//     * @return MessageRouting
+//     */
+//    public MessageRouting geoCast(GeoArea geoArea, byte[] ipAddress) {
+//        return build(new DestinationAddressContainer(
+//                DestinationType.AD_HOC_GEOCAST,
+//                new NetworkAddress(ipAddress),
+//                channel,
+//                null,
+//                geoArea,
+//                ProtocolType.UDP
+//        ));
+//    }
+//
+//    /**
+//     * Creates a topological broadcast using {@link AdHocChannel} SCH1 and single hop.
+//     *
+//     * @return MessageRouting
+//     */
+//    public MessageRouting topoBroadCast() {
+//        return topoCast(NetworkAddress.BROADCAST_ADDRESS.getAddress(), 1);
+//    }
+//
+//    /**
+//     * Creates a topological broadcast using a specific {@link AdHocChannel} and specific number of hops.
+//     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts
+//     *
+//     * @param hops number of hops
+//     * @return MessageRouting
+//     */
+//    public MessageRouting topoBroadCast(int hops) {
+//        return topoCast(NetworkAddress.BROADCAST_ADDRESS.getAddress(), hops);
+//    }
+//
+//    /**
+//     * Creates a topological cast using a specific destination host name, a specific {@link AdHocChannel} and specific number of hops.
+//     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts, so if receiver can't be reached, within
+//     * one hop transmission will fail.
+//     *
+//     * @param receiverName destination host name
+//     * @param hops         number of hops
+//     * @return MessageRouting
+//     */
+//    public MessageRouting topoCast(String receiverName, int hops) {
+//        return topoCast(IpResolver.getSingleton().nameToIp(receiverName).getAddress(), hops);
+//    }
+//
+//    /**
+//     * Creates a topological cast using a specific destination IP address, a specific {@link AdHocChannel} and specific number of hops.
+//     * Note: The SNS will dismiss hop value, since it only allows for single-hop TopoCasts, so if receiver can't be reached, within
+//     * one hop transmission will fail.
+//     *
+//     * @param ipAddress destination IP address
+//     * @param hops      number of hops
+//     * @return MessageRouting
+//     */
+//    public MessageRouting topoCast(byte[] ipAddress, int hops) {
+//        return build(new DestinationAddressContainer(
+//                DestinationType.AD_HOC_TOPOCAST,
+//                new NetworkAddress(ipAddress),
+//                channel,
+//                require8BitTtl(hops),
+//                null,
+//                ProtocolType.UDP
+//        ));
+//    }
 
     /**
      * The maximum time to live (TTL).
