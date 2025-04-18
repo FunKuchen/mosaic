@@ -32,29 +32,35 @@ import javax.annotation.Nullable;
 
 public class BicycleRoutingApp extends AbstractApplication<VehicleOperatingSystem> implements VehicleApplication {
 
+    private boolean firstUpdate = true;
     private VehicleRoute initialRoute;
+
     @Override
     public void onVehicleUpdated(@Nullable VehicleData previousVehicleData, @Nonnull VehicleData updatedVehicleData) {
+        if (firstUpdate && updatedVehicleData.getRoadPosition() != null)  {
+            initialRoute = getOs().getNavigationModule().getCurrentRoute();
+            getLog().infoSimTime(this, "Initial route has length {} and connections {}", initialRoute.getLength(), initialRoute.getConnectionIds());
+            BicycleBehavior behaviorPattern = new BicycleBehavior();
 
+            GeoPoint currentPoint = this.getOs().getNavigationModule().getCurrentPosition();
+            GeoPoint targetPoint = this.getOs().getNavigationModule().getTargetPosition();
+            RoutingCostFunction bicycleRoutingCostFunction = new BicycleSpecificCostFunction(behaviorPattern);
+            RoutingParameters bicycleParameters = new RoutingParameters()
+                    .alternativeRoutes(3)
+                    .considerTurnCosts(true)
+                    .costFunction(bicycleRoutingCostFunction)
+                    .vehicleClass(VehicleClass.Bicycle);
+            CandidateRoute bestRoute = this.getOs().getNavigationModule().calculateRoutes(targetPoint, bicycleParameters)
+                    .getBestRoute();
+            getOs().getNavigationModule().switchRoute(bestRoute);
+            getLog().infoSimTime(this, "Switched to route with length {} and connections {}", bestRoute.getLength(), bestRoute.getConnectionIds());
+            firstUpdate = false;
+        }
     }
 
     @Override
     public void onStartup() {
-//        getLog().info("HELLO WORLD FROM BIKE: " + this.getOs().getId());
-        initialRoute = this.getOs().getNavigationModule().getCurrentRoute();
 
-        BicycleBehavior behaviorPattern = new BicycleBehavior();
-
-        GeoPoint currentPoint = this.getOs().getNavigationModule().getCurrentPosition();
-        GeoPoint targetPoint = this.getOs().getNavigationModule().getTargetPosition();
-        RoutingCostFunction bicycleRoutingCostFunction = new BicycleSpecificCostFunction(behaviorPattern);
-        RoutingParameters bicycleParameters = new RoutingParameters()
-                .alternativeRoutes(3)
-                .considerTurnCosts(true)
-                .costFunction(bicycleRoutingCostFunction)
-                .vehicleClass(VehicleClass.Bicycle);
-        CandidateRoute bestRoute = this.getOs().getNavigationModule().calculateRoutes(targetPoint, bicycleParameters)
-                .getBestRoute();
     }
 
     @Override
