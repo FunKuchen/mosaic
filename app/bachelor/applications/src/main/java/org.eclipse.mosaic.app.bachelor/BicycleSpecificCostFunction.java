@@ -60,6 +60,7 @@ public class BicycleSpecificCostFunction implements RoutingCostFunction {
 
     @Override
     public double calculateCosts(final EdgeProperties edgeProperties) {
+
         return switch (edgeProperties.getWayType()) {
             case "cycleway" -> edgeProperties.getLength() * (comfortFactors.get("cycleway") * ((10 - behavior.riskAversion) / 10));
             case "footway" -> edgeProperties.getLength() * (comfortFactors.get("footway") * ((10 - behavior.riskAversion) / 10));

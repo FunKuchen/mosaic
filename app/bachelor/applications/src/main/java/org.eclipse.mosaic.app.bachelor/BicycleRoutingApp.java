@@ -15,9 +15,11 @@
 
 package org.eclipse.mosaic.app.bachelor;
 
+import org.eclipse.mosaic.fed.application.ambassador.SimulationKernel;
 import org.eclipse.mosaic.fed.application.app.AbstractApplication;
 import org.eclipse.mosaic.fed.application.app.api.VehicleApplication;
 import org.eclipse.mosaic.fed.application.app.api.os.VehicleOperatingSystem;
+import org.eclipse.mosaic.lib.database.Database;
 import org.eclipse.mosaic.lib.enums.VehicleClass;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
@@ -25,6 +27,7 @@ import org.eclipse.mosaic.lib.objects.vehicle.VehicleRoute;
 import org.eclipse.mosaic.lib.routing.CandidateRoute;
 import org.eclipse.mosaic.lib.routing.RoutingCostFunction;
 import org.eclipse.mosaic.lib.routing.RoutingParameters;
+import org.eclipse.mosaic.lib.routing.database.DatabaseRouting;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
 
 import javax.annotation.Nonnull;
@@ -39,8 +42,18 @@ public class BicycleRoutingApp extends AbstractApplication<VehicleOperatingSyste
     public void onVehicleUpdated(@Nullable VehicleData previousVehicleData, @Nonnull VehicleData updatedVehicleData) {
         if (firstUpdate && updatedVehicleData.getRoadPosition() != null)  {
             initialRoute = getOs().getNavigationModule().getCurrentRoute();
+
+            Database database = ((DatabaseRouting)
+                    SimulationKernel.SimulationKernel.getCentralNavigationComponent().getRouting()).getScenarioDatabase();
+
             getLog().infoSimTime(this, "Initial route has length {} and connections {}", initialRoute.getLength(), initialRoute.getConnectionIds());
             BicycleBehavior behaviorPattern = new BicycleBehavior();
+
+            getOs().requestVehicleParametersUpdate()
+                    .changeMaxSpeed(behaviorPattern.maxSpeed)
+                    .changeMaxAcceleration(behaviorPattern.acceleration)
+                    .changeMaxDeceleration(behaviorPattern.deceleration)
+                    .apply();
 
             GeoPoint currentPoint = this.getOs().getNavigationModule().getCurrentPosition();
             GeoPoint targetPoint = this.getOs().getNavigationModule().getTargetPosition();
