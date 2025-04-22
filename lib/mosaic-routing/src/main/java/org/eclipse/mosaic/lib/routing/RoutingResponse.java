@@ -57,4 +57,8 @@ public class RoutingResponse {
     public final CandidateRoute getBestRoute() {
         return bestRoute;
     }
+
+//    public final CandidateRoute getBestBicycleRoute() {
+//
+//    }
 }
