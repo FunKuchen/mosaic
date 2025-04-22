@@ -18,7 +18,6 @@ package org.eclipse.mosaic.app.bachelor;
 import org.eclipse.mosaic.lib.routing.EdgeProperties;
 import org.eclipse.mosaic.lib.routing.RoutingCostFunction;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,8 +32,6 @@ import java.util.stream.Stream;
  */
 public class BicycleSpecificCostFunction implements RoutingCostFunction {
 
-    private final Map<String, Double> affectedConnectionSpeeds = new HashMap<>();
-    private final Map<String, Long> affectedConnectionTravelTimes = new HashMap<>();
     private final BicycleBehavior behavior;
 
     private final Map<String, Double> comfortFactors = Stream.of(new Object[][]{
@@ -79,26 +76,5 @@ public class BicycleSpecificCostFunction implements RoutingCostFunction {
     @Override
     public String getCostFunctionName() {
         return "Individual cyclist cost function";
-    }
-
-    /**
-     * Updates the current speed on the connection which is considered by this cost function.
-     *
-     * @param connectionId                  the id of the connection
-     * @param connectionSpeedMeterPerSecond the speed in m/s
-     */
-    public void setConnectionSpeedMS(String connectionId, double connectionSpeedMeterPerSecond) {
-        affectedConnectionSpeeds.put(connectionId, connectionSpeedMeterPerSecond);
-    }
-
-
-    /**
-     * Updates the current travel time in seconds on the connection which is considered by this cost function.
-     *
-     * @param connectionId      the id of the connection
-     * @param travelTimeSeconds the speed in m/s
-     */
-    public void setConnectionTravelTime(String connectionId, long travelTimeSeconds) {
-        affectedConnectionTravelTimes.put(connectionId, travelTimeSeconds);
     }
 }
