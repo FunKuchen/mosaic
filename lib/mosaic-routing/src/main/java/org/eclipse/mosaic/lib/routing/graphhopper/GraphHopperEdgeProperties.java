@@ -88,6 +88,16 @@ public class GraphHopperEdgeProperties implements EdgeProperties {
         return WayTypeEncoder.decode(getWayTypeEncoded());
     }
 
+    @Override
+    public Boolean getHasBikeLane() {
+
+        Optional<Connection> connection = getConnection();
+        if (connection.isPresent()) {
+            return connection.get().getHasBikeLane();
+        }
+        return false;
+    }
+
     public int getWayTypeEncoded() {
         return currentEdgeIterator.get(wayTypeEncoder);
     }

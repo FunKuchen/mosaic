@@ -48,6 +48,7 @@ public class OptionalTurnCostProvider implements TurnCostProvider {
 
     @Override
     public double calcTurnWeight(int edgeFrom, int nodeVia, int edgeTo) {
+        //TODO include traffic lights here, as well as adjust turn costs for bicycles
         if (!EdgeIterator.Edge.isValid(edgeFrom) || !EdgeIterator.Edge.isValid(edgeTo)) {
             return 0;
         }

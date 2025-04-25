@@ -37,6 +37,7 @@ public class Connection {
     private final Way way;
     private int lanes;
     private double length;
+    private boolean hasBikeLane;
 
     private final List<Node> nodes = new ArrayList<>();
     private final Map<String, Connection> outgoing = new HashMap<>();
@@ -129,6 +130,10 @@ public class Connection {
         return length;
     }
 
+    public boolean getHasBikeLane() {
+        return hasBikeLane;
+    }
+
     /**
      * Gets the maximum speed allowed on this connection in km/h.
      *
@@ -196,6 +201,11 @@ public class Connection {
      */
     public Connection setLanes(int lanes) {
         this.lanes = lanes;
+        return this;
+    }
+
+    public Connection setHasBikeLane(boolean isBikeLane) {
+        this.hasBikeLane = isBikeLane;
         return this;
     }
 

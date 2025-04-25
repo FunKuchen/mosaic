@@ -281,7 +281,7 @@ public class SQLiteReader {
     private void loadConnections(Database.Builder databaseBuilder) {
         try {
             List<SQLiteAccess.ResultRow> connections = sqlite.executeStatement(
-                    "SELECT id, way_id, lanes, length FROM " + TABLES.CONNECTION
+                    "SELECT id, way_id, lanes, length, hasBikeLane FROM " + TABLES.CONNECTION
             ).getRows();
 
             // rework into objects
@@ -291,9 +291,10 @@ public class SQLiteReader {
                 String wayId = connectionEntry.getString("way_id");
                 int lanes = connectionEntry.getInt("lanes");
                 double length = connectionEntry.getDouble("length");
+                boolean hasBikeLane = connectionEntry.getBoolean("hasBikeLane");
 
                 // create object and save to db
-                databaseBuilder.addConnection(id, wayId).setLanes(lanes).setLength(length);
+                databaseBuilder.addConnection(id, wayId).setLanes(lanes).setLength(length).setHasBikeLane(hasBikeLane);
             }
 
         } catch (SQLException e) {

@@ -185,7 +185,7 @@ public class SQLiteWriter {
         statement.executeUpdate("CREATE TABLE "
                 + TABLES.WAY_CONSISTS_OF + " (way_id TEXT, node_id TEXT, sequence_number INTEGER)");
         statement.executeUpdate("CREATE TABLE "
-                + TABLES.CONNECTION + " (id TEXT, way_id TEXT, lanes INTEGER, length REAL)");
+                + TABLES.CONNECTION + " (id TEXT, way_id TEXT, lanes INTEGER, length REAL, hasBikeLane BOOLEAN)");
         statement.executeUpdate("CREATE TABLE "
                 + TABLES.CONNECTION_CONSISTS_OF + " (connection_id TEXT, node_id TEXT, sequence_number INTEGER)");
         // turn restrictions
@@ -402,8 +402,8 @@ public class SQLiteWriter {
      * @param database Save connections into the database.
      */
     private void saveConnections(Database database) {
-        String columns = "id, way_id, lanes, length";
-        String statement = "INSERT INTO " + TABLES.CONNECTION + "(" + columns + ") VALUES (?, ?, ?, ?)";
+        String columns = "id, way_id, lanes, length, hasBikeLane";
+        String statement = "INSERT INTO " + TABLES.CONNECTION + "(" + columns + ") VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement prep = sqlite.getConnection().prepareStatement(statement)) {
             boolean autoCommit = sqlite.getConnection().getAutoCommit();
             batchSaveConnections(database, prep);
@@ -420,6 +420,7 @@ public class SQLiteWriter {
             prep.setString(2, connection.getWay().getId());
             prep.setInt(3, connection.getLanes());
             prep.setDouble(4, connection.getLength());
+            prep.setBoolean(5, connection.getHasBikeLane());
             prep.executeUpdate();
         }
         sqlite.getConnection().commit();

@@ -62,5 +62,5 @@ public interface EdgeProperties {
      */
     String getWayType();
 
-
+    Boolean getHasBikeLane();
 }

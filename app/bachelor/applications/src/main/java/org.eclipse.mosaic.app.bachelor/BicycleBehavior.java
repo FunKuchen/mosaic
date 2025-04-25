@@ -55,6 +55,7 @@ public class BicycleBehavior {
     double riskAversion;
 
     public BicycleBehavior() {
+        //TODO getOS().getrandom
         Random random = new Random();
         isCommuter = random.nextDouble() < 0.3;
 

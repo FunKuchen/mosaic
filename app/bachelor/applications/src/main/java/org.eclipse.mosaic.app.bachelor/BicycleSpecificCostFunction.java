@@ -27,12 +27,11 @@ import java.util.stream.Stream;
  * time on the connections need to to be updated with travel times or speeds from
  * the simulation.
  *
- * @see #setConnectionSpeedMS(String, double)
- * @see #setConnectionTravelTime(String, long)
- */
+ * */
 public class BicycleSpecificCostFunction implements RoutingCostFunction {
 
     private final BicycleBehavior behavior;
+    private double BIKE_LANE_FACTOR = 0.6;
 
     private final Map<String, Double> comfortFactors = Stream.of(new Object[][]{
             {"cycleway", 0.5},
@@ -50,27 +49,50 @@ public class BicycleSpecificCostFunction implements RoutingCostFunction {
             {"trunk", 2.0}
     }).collect(Collectors.toMap(data -> (String) data[0], data -> (Double) data[1]));
 
-
     public BicycleSpecificCostFunction(BicycleBehavior bicycleBehavior) {
         behavior = bicycleBehavior;
     }
 
     @Override
     public double calculateCosts(final EdgeProperties edgeProperties) {
+        // This variable is relevant for all roads. Currently, the database does not include information on all lanes. However, bicycle
+        // lanes are often modeled as a lane of a bigger road. Because these bike lanes improve cycling quality on this road, the existance
+        // of a bike lane on a bigger road should be a factor.
+        double bikeLaneFactor = getBikeLaneFactor(edgeProperties);
 
-        return switch (edgeProperties.getWayType()) {
-            case "cycleway" -> edgeProperties.getLength() * (comfortFactors.get("cycleway") * ((10 - behavior.riskAversion) / 10));
-            case "footway" -> edgeProperties.getLength() * (comfortFactors.get("footway") * ((10 - behavior.riskAversion) / 10));
-            case "path" -> edgeProperties.getLength() * (comfortFactors.get("path") * ((10 - behavior.riskAversion) / 10));
-            case "pedestrian" -> edgeProperties.getLength() * (comfortFactors.get("pedestrian") * ((10 - behavior.riskAversion) / 10));
-            case "living_street" -> edgeProperties.getLength() * (comfortFactors.get("living_street") * ((10 - behavior.riskAversion) / 10));
-            case "residential" -> edgeProperties.getLength() * (comfortFactors.get("residential") * ((10 - behavior.riskAversion) / 10));
-            case "service" -> edgeProperties.getLength() * (comfortFactors.get("service") * ((10 - behavior.riskAversion) / 10));
-            case "tertiary" -> edgeProperties.getLength() * (comfortFactors.get("tertiary") * ((10 - behavior.riskAversion) / 10));
-            case "tertiary_link" -> edgeProperties.getLength() * (comfortFactors.get("tertiary_link") * ((10 - behavior.riskAversion) / 10));
-            case "unclassified" -> edgeProperties.getLength() * (comfortFactors.get("unclassified") * ((10 - behavior.riskAversion) / 10));
-            default -> RoutingCostFunction.Shortest.calculateCosts(edgeProperties);
-        };
+        switch (edgeProperties.getWayType()) {
+            case "cycleway":
+                return edgeProperties.getLength() * (comfortFactors.get("cycleway") * ((10 - behavior.riskAversion) / 10));
+            case "footway":
+                return edgeProperties.getLength() * (comfortFactors.get("footway") * ((10 - behavior.riskAversion) / 10));
+            case "path":
+                return edgeProperties.getLength() * (comfortFactors.get("path") * ((10 - behavior.riskAversion) / 10));
+            case "pedestrian":
+                return edgeProperties.getLength() * (comfortFactors.get("pedestrian") * ((10 - behavior.riskAversion) / 10));
+            case "living_street":
+                return edgeProperties.getLength() * ((comfortFactors.get("living_street") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "residential":
+                return edgeProperties.getLength() * ((comfortFactors.get("residential") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "service":
+                return edgeProperties.getLength() * ((comfortFactors.get("service") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "tertiary":
+                return edgeProperties.getLength() * ((comfortFactors.get("tertiary") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "tertiary_link":
+                return edgeProperties.getLength() * ((comfortFactors.get("tertiary_link") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "unclassified":
+                return edgeProperties.getLength() * ((comfortFactors.get("unclassified") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            default:
+                return RoutingCostFunction.Shortest.calculateCosts(edgeProperties);
+        }
+    }
+
+    private double getBikeLaneFactor(EdgeProperties edgeProperties) {
+        double bikeLaneFactor = 1;
+        boolean edgeHasBikeLane = edgeProperties.getHasBikeLane();
+        if (edgeHasBikeLane) {
+            bikeLaneFactor = BIKE_LANE_FACTOR;
+        }
+        return bikeLaneFactor;
     }
 
     @Override
