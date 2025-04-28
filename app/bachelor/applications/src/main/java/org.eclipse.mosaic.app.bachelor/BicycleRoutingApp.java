@@ -59,7 +59,7 @@ public class BicycleRoutingApp extends AbstractApplication<VehicleOperatingSyste
             GeoPoint targetPoint = this.getOs().getNavigationModule().getTargetPosition();
             RoutingCostFunction bicycleRoutingCostFunction = new BicycleSpecificCostFunction(behaviorPattern);
             RoutingParameters bicycleParameters = new RoutingParameters()
-                    .alternativeRoutes(3)
+                    .alternativeRoutes(1)
                     .considerTurnCosts(true)
                     .costFunction(bicycleRoutingCostFunction)
                     .vehicleClass(VehicleClass.Bicycle);

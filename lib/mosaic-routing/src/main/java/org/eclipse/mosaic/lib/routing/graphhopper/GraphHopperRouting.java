@@ -81,7 +81,7 @@ public class GraphHopperRouting {
 
     public static final Profile PROFILE_CAR = new Profile("car").setVehicle("car").setTurnCosts(true);
 
-    public static final Profile PROFILE_BIKE = new Profile("bike").setVehicle("bike").setTurnCosts(false);
+    public static final Profile PROFILE_BIKE = new Profile("bike").setVehicle("bike").setTurnCosts(true);
 
     public static final List<Profile> PROFILES = Collections.unmodifiableList(Lists.newArrayList(
             PROFILE_CAR, PROFILE_BIKE

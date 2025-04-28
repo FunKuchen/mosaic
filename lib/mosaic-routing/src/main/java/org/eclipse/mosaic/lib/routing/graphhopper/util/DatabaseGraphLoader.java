@@ -177,6 +177,7 @@ public class DatabaseGraphLoader {
 
         // analyze turn costs
         new TurnCostAnalyzer(graphStorage, wayTypeEncoder).createTurnCostsForVehicle(car);
+        new BicycleTurnCostAnalyzer(graphStorage, wayTypeEncoder).createTurnCostsForVehicle(bike);
 
         if (graphStorage.getNodes() == 0) {
             throw new IllegalStateException(
