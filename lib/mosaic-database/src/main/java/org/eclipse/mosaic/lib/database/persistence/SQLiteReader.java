@@ -280,9 +280,25 @@ public class SQLiteReader {
      */
     private void loadConnections(Database.Builder databaseBuilder) {
         try {
-            List<SQLiteAccess.ResultRow> connections = sqlite.executeStatement(
-                    "SELECT id, way_id, lanes, length, hasBikeLane FROM " + TABLES.CONNECTION
+            boolean hasBikeLaneColumn = false;
+            List<SQLiteAccess.ResultRow> columnInfo = sqlite.executeStatement(
+                    "PRAGMA table_info(" + TABLES.CONNECTION + ")"
             ).getRows();
+
+            for (SQLiteAccess.ResultRow row : columnInfo) {
+                String columnName = row.getString("name");
+                if ("hasBikeLane".equals(columnName)) {
+                    hasBikeLaneColumn = true;
+                }
+            }
+
+            StringBuilder sb = new StringBuilder("SELECT id, way_id, lanes, length");
+            if (hasBikeLaneColumn) {
+                sb.append(", hasBikeLane");
+            }
+            sb.append(" FROM ").append(TABLES.CONNECTION);
+
+            List<SQLiteAccess.ResultRow> connections = sqlite.executeStatement(sb.toString()).getRows();
 
             // rework into objects
             for (SQLiteAccess.ResultRow connectionEntry : connections) {
@@ -291,8 +307,10 @@ public class SQLiteReader {
                 String wayId = connectionEntry.getString("way_id");
                 int lanes = connectionEntry.getInt("lanes");
                 double length = connectionEntry.getDouble("length");
-                boolean hasBikeLane = connectionEntry.getBoolean("hasBikeLane");
-
+                boolean hasBikeLane = false;
+                if (hasBikeLaneColumn) {
+                    connectionEntry.getBoolean("hasBikeLane");
+}
                 // create object and save to db
                 databaseBuilder.addConnection(id, wayId).setLanes(lanes).setLength(length).setHasBikeLane(hasBikeLane);
             }
