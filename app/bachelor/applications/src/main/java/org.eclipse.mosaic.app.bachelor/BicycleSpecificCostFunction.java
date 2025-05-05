@@ -26,12 +26,10 @@ import java.util.stream.Stream;
  * A route cost function which uses driving time on roads for the costs. The driving
  * time on the connections need to to be updated with travel times or speeds from
  * the simulation.
- *
  * */
 public class BicycleSpecificCostFunction implements RoutingCostFunction {
 
     private final BicycleBehavior behavior;
-    private double BIKE_LANE_FACTOR = 0.6;
 
     private final Map<String, Double> comfortFactors = Stream.of(new Object[][]{
             {"cycleway", 0.5},
@@ -90,7 +88,7 @@ public class BicycleSpecificCostFunction implements RoutingCostFunction {
         double bikeLaneFactor = 1;
         boolean edgeHasBikeLane = edgeProperties.getHasBikeLane();
         if (edgeHasBikeLane) {
-            bikeLaneFactor = BIKE_LANE_FACTOR;
+            bikeLaneFactor = behavior.bikeLaneFactor;
         }
         return bikeLaneFactor;
     }

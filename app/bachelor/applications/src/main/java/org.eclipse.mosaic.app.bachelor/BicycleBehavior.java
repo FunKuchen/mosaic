@@ -15,7 +15,7 @@
 
 package org.eclipse.mosaic.app.bachelor;
 
-import java.util.Random;
+import org.eclipse.mosaic.lib.math.RandomNumberGenerator;
 
 public class BicycleBehavior {
 
@@ -39,29 +39,27 @@ public class BicycleBehavior {
         SLOW, MEDIUM, FAST
     }
 
-    boolean isCommuter;
+//    boolean isCommuter;
 
-    double maxTripLength;
-    double turnFactor;
-    double tlFactor;
-    double bikeLaneFactor;
+//    double maxTripLength;
+//    double turnFactor;
+//    double tlFactor;
 
     speedCategory cyclistCategory;
     double maxSpeed;
     double acceleration;
     double deceleration;
 
+    double bikeLaneFactor;
     // A high riskAversion (=10) leads way types having no influence on route finding
     double riskAversion;
 
-    public BicycleBehavior() {
-        //TODO getOS().getrandom
-        Random random = new Random();
-        isCommuter = random.nextDouble() < 0.3;
+    public BicycleBehavior(RandomNumberGenerator random) {
+//        isCommuter = random.nextDouble() < 0.3;
 
-        initializeTripLength(random);
-        initializeTurnFactor(random);
-        initializeTlFactor(random);
+//        initializeTripLength(random);
+//        initializeTurnFactor(random);
+//        initializeTlFactor(random);
         initializeBikeLaneFactor(random);
         initializeRiskAversion(random);
 
@@ -71,27 +69,27 @@ public class BicycleBehavior {
         initializeDeceleration(random);
     }
 
-    private void initializeTripLength(Random random) {
-        if (isCommuter) {
-            maxTripLength = random.nextGaussian(6.0, 1.0); // TODO value for stddev
-        } else {
-            maxTripLength = random.nextGaussian(3.5, 1.0); // TODO value for stddev
-        }
-    }
+//    private void initializeTripLength(Random random) {
+//        if (isCommuter) {
+//            maxTripLength = random.nextGaussian(6.0, 1.0); // TODO value for stddev
+//        } else {
+//            maxTripLength = random.nextGaussian(3.5, 1.0); // TODO value for stddev
+//        }
+//    }
+//
+//    private void initializeTurnFactor(Random random) {
+//        turnFactor = random.nextGaussian(1.3, 0.3); // TODO values
+//    }
+//
+//    private void initializeTlFactor(Random random) {
+//        tlFactor = random.nextGaussian(1.5, 0.6); // TODO values
+//    }
 
-    private void initializeTurnFactor(Random random) {
-        turnFactor = random.nextGaussian(1.3, 0.3); // TODO values
-    }
-
-    private void initializeTlFactor(Random random) {
-        tlFactor = random.nextGaussian(1.5, 0.6); // TODO values
-    }
-
-    private void initializeBikeLaneFactor(Random random) {
+    private void initializeBikeLaneFactor(RandomNumberGenerator random) {
         bikeLaneFactor = random.nextGaussian(0.7, 0.5); // TODO values
     }
 
-    private void initializeRiskAversion(Random random) {
+    private void initializeRiskAversion(RandomNumberGenerator random) {
         double gaussian = random.nextGaussian(5.5, 1.5);
         double clamped = Math.max(1, Math.min(gaussian, 10));
         riskAversion = Math.floor(clamped);
@@ -100,9 +98,9 @@ public class BicycleBehavior {
     /**
      * Numbers for this distribution are from this paper.
      * <a href="https://www.sciencedirect.com/science/article/pii/S0140366423001342">...</a>
-     * @param random A Random object
+     * @param random A RandomNumberGenerator object
      */
-    private void initializeCyclistCategory(Random random) {
+    private void initializeCyclistCategory(RandomNumberGenerator random) {
         double averageSpeed = random.nextGaussian(15.768, 0.89);
         if (0.0 < averageSpeed && averageSpeed <= 13.5) {
             cyclistCategory = speedCategory.SLOW;
@@ -116,7 +114,7 @@ public class BicycleBehavior {
         }
     }
 
-    private void initializeMaxSpeed(Random random) {
+    private void initializeMaxSpeed(RandomNumberGenerator random) {
         switch (cyclistCategory) {
             //TODO values in gaussian are arbitrary, but kind of based on visuals from paper cited above. Best would be to
             // implement distributions mentioned above each case
@@ -132,7 +130,7 @@ public class BicycleBehavior {
         }
     }
 
-    private void initializeAcceleration(Random random) {
+    private void initializeAcceleration(RandomNumberGenerator random) {
         switch (cyclistCategory) {
             case SLOW:
                 // Burr Type III distribution Burr3(Amax; c,d)
@@ -146,7 +144,7 @@ public class BicycleBehavior {
         }
     }
 
-    private void initializeDeceleration(Random random) {
+    private void initializeDeceleration(RandomNumberGenerator random) {
         switch (cyclistCategory) {
             case SLOW:
                 // Best fitting distribution: Johnson's Su-distribution JSU(dmax;a,b)
