@@ -63,4 +63,6 @@ public interface IConnection extends Serializable {
      */
     Collection<IConnection> getOutgoingConnections();
 
+    boolean getHasBikeLane();
+
 }

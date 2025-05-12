@@ -202,6 +202,12 @@ public class LazyLoadingConnection implements IConnection {
     }
 
     @Override
+    public boolean getHasBikeLane() {
+        final Connection con = getConnectionFromDatabase();
+        return con != null && con.getHasBikeLane();
+    }
+
+    @Override
     public int hashCode() {
         // do not include lazy loading fields into hashCode generation
         return new HashCodeBuilder(13, 37)

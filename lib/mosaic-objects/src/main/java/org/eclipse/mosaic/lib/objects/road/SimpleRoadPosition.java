@@ -231,6 +231,11 @@ public class SimpleRoadPosition implements IRoadPosition {
         }
 
         @Override
+        public boolean getHasBikeLane() {
+            return false;
+        }
+
+        @Override
         public int hashCode() {
             return new HashCodeBuilder(19, 37)
                     .append(this.connectionId)

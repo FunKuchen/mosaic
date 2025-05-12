@@ -19,8 +19,10 @@ import java.io.Serializable;
 
 public class CBicycleApplication implements Serializable {
     public boolean calculateRoutes;
+    public String outputFile;
 
     public CBicycleApplication() {
         calculateRoutes = false;
+        outputFile = "Logs/bicycleRoutingAppOutput.csv";
     }
 }

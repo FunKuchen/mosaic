@@ -40,6 +40,7 @@ import com.opencsv.CSVWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,7 +53,7 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
     private boolean firstUpdate = true;
     private BicycleBehavior behaviorPattern;
 
-    String filename = "logs/values/values.csv";
+    String outputFile;
     private final List<String[]> values = new ArrayList<>();
 
     public BicycleRoutingApp() {
@@ -62,7 +63,7 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
     @Override
     public void onStartup() {
         config = getConfiguration();
-
+        outputFile = config.outputFile;
         // Create an individual behavior pattern for the unit
         behaviorPattern = new BicycleBehavior(getRandom());
 
@@ -73,7 +74,7 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
                 .changeMaxDeceleration(behaviorPattern.deceleration)
                 .apply();
 
-        getOs().getPerceptionModule().enable(new SimplePerceptionConfiguration.Builder(360, 10)
+        getOs().getPerceptionModule().enable(new SimplePerceptionConfiguration.Builder(360, 25)
                 .build());
 
         getOs().getEventManager().addEvent(new Event(getOs().getSimulationTime(), this));
@@ -91,7 +92,8 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
         VehicleRoute initialRoute = getOs().getNavigationModule().getCurrentRoute();
         getLog().infoSimTime(this, "Initial route has length {} and connections {}", initialRoute.getLength(), initialRoute.getConnectionIds());
 
-        // Currently we are calculating just one route, as multiple alternatives have caused the calculation to crash -> FIXME
+        // Currently we are calculating just one route, as multiple alternatives have caused the calculation to crash -> Known FIXME with
+        // graphhopper and turn costs -> Update Graphhopper
         GeoPoint targetPoint = this.getOs().getNavigationModule().getTargetPosition();
         RoutingCostFunction bicycleRoutingCostFunction = new BicycleSpecificCostFunction(behaviorPattern);
         RoutingParameters bicycleParameters = new RoutingParameters()
@@ -99,6 +101,8 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
                 .considerTurnCosts(true)
                 .costFunction(bicycleRoutingCostFunction)
                 .vehicleClass(VehicleClass.Bicycle);
+
+        // Calculate best route based on cost function
         CandidateRoute bestRoute = this.getOs().getNavigationModule().calculateRoutes(targetPoint, bicycleParameters)
                 .getBestRoute();
 
@@ -108,65 +112,89 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
         firstUpdate = false;
     }
 
-//    // Indirectly given through the size of the distance list
-//    public void saveNumberOfVehicles(List<VehicleObject> perceivedVehicles) {
-//        int carCount = 0;
-//        int bicycleCount = 0;
-//
-//        Map<String, VehicleUnit> vehicles = UnitSimulator.UnitSimulator.getVehicles();
-//
-//
-//        for (VehicleObject vehicleObject : perceivedVehicles) {
-//            VehicleType vehicleType = vehicles.get(vehicleObject.getId()).getInitialVehicleType();
-//            if (vehicleType.getName().equals("Car")) {carCount += 1;} else if (vehicleType.getName().equals("Bike")) {
-//                bicycleCount += 1;
-//            }
-//        }
-//        perceivedCarsPerStep.add(carCount);
-//        perceivedBikesPerStep.add(bicycleCount);
-//    }
-
+    /**
+     * Save necessary values for evaluation for this timestep.
+     * Saved data:
+     * - This bicycles ID
+     * - Simulation Time
+     * - perceived units ID
+     * - Distance to perceived unit
+     * - Angle to perceived unit
+     * - Boolean if perceived unit is on same edge
+     * - Boolean if perceived unit is on same lane
+     * - Current speed of perceived unit
+     * - Edge id that this unit is currently on
+     * - Type of edge this unit is currently on
+     * - Number of lanes this edge has
+     * - If the edge has a bike lane
+     * @param perceivedVehicles A list of perceived vehicles in this timestep from the perception module.
+     */
     public void saveValues(List<VehicleObject> perceivedVehicles) {
         if (perceivedVehicles.isEmpty()) {
-            String[] noValues = new String[8];
-            noValues[0] = this.getOs().getId();
-            noValues[1] = (String.valueOf(this.getOs().getSimulationTime()));
-            noValues[2] = "";
-            noValues[3] = "";
-            noValues[4] = "";
-            noValues[5] = "";
-            noValues[6] = "";
-            noValues[7] = "";
-            values.add(noValues);
+            saveEmptyValues();
+            return;
         }
-        Map<String, VehicleUnit> vehicles = UnitSimulator.UnitSimulator.getVehicles();
+        savePerceivedValues(perceivedVehicles);
+    }
 
+    private void saveEmptyValues() {
+        if (getOs().getRoadPosition() == null) {
+            return;
+        }
+
+        String[] emptyValues = new String[13];
+        emptyValues[0] = getOs().getId();
+        emptyValues[1] = String.valueOf(getOs().getSimulationTime());
+        for (int i = 2; i < emptyValues.length; i++) {
+            emptyValues[i] = "";
+        }
+        if (getOs().getRoadPosition() != null) {
+            emptyValues[9] = getOs().getRoadPosition().getConnection().getId();
+            emptyValues[10] = getOs().getRoadPosition().getConnection().getWay().getType();
+            emptyValues[11] = String.valueOf(getOs().getRoadPosition().getConnection().getLanes());
+            emptyValues[12] = String.valueOf(getOs().getRoadPosition().getConnection().getHasBikeLane());
+        }
+        values.add(emptyValues);
+    }
+
+    private void savePerceivedValues(List<VehicleObject> perceivedVehicles) {
+        if (getOs().getRoadPosition() == null) {
+            return;
+        }
+
+        Map<String, VehicleUnit> vehicles = UnitSimulator.UnitSimulator.getVehicles();
         long timestamp = getOs().getSimulationTime();
 
-        for (VehicleObject perceivedVehicle : perceivedVehicles) {
-            String[] currentValues = new String[8];
+        for (VehicleObject perceivedVehicle: perceivedVehicles) {
+            String[] currentValues = new String[13];
             VehicleType vehicleType = vehicles.get(perceivedVehicle.getId()).getInitialVehicleType();
             double distance = this.getOs().getPosition().toVector3d().distanceTo(perceivedVehicle.getPosition());
             Vector3d directionVector = new Vector3d(perceivedVehicle.getPosition()).subtract(this.getOs().getPosition().toVector3d());
             double angle = new Vector3d(directionVector).angle(VectorUtils.getDirectionVectorFromHeading(Objects.requireNonNull(this.getOs().getVehicleData()).getHeading(), new Vector3d()));
-            if (vehicleType.getName().equals("Car")) {
-                currentValues[3] = "car";
-            } else if (vehicleType.getName().equals("Bike")) {
-                currentValues[3] = "bike";
-            }
-            currentValues[0] = this.getOs().getId();
+            Arrays.fill(currentValues, "");
+            currentValues[0] = getOs().getId();
             currentValues[1] = String.valueOf(timestamp);
             currentValues[2] = perceivedVehicle.getId();
+            currentValues[3] = vehicleType.getName().equalsIgnoreCase("Car") ? "car"
+                    : vehicleType.getName().equalsIgnoreCase("Bike") ? "bike" : "";
             currentValues[4] = String.valueOf(distance);
             currentValues[5] = String.valueOf(angle);
             currentValues[6] = String.valueOf(isOnSameEdge(perceivedVehicle));
             currentValues[7] = String.valueOf(isOnSameLane(perceivedVehicle));
+            currentValues[8] = String.valueOf(perceivedVehicle.getSpeed());
+
+            if (getOs().getRoadPosition() != null) {
+                currentValues[9] = getOs().getRoadPosition().getConnection().getId();
+                currentValues[10] = getOs().getRoadPosition().getConnection().getWay().getType();
+                currentValues[11] = String.valueOf(getOs().getRoadPosition().getConnection().getLanes());
+                currentValues[12] = String.valueOf(getOs().getRoadPosition().getConnection().getHasBikeLane());
+            }
             values.add(currentValues);
         }
     }
 
     public boolean isOnSameEdge(VehicleObject vehicle) {
-        if (Objects.requireNonNull(this.getOs().getVehicleData()).getRoadPosition() != null) {
+        if (Objects.requireNonNull(this.getOs().getVehicleData()).getRoadPosition() != null && vehicle.getEdgeId() != null) {
             return vehicle.getEdgeId().equals(Objects.requireNonNull(this.getOs().getVehicleData()).getRoadPosition().getConnectionId());
         } else {
             return false;
@@ -181,58 +209,9 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
         }
     }
 
-//    public double carDistanceComfort(VehicleObject perceivedVehicle) {
-//        Vector3d directionVector = new Vector3d(perceivedVehicle.getPosition()).subtract(this.getOs().getPosition().toVector3d());
-//        double distance = this.getOs().getPosition().toVector3d().distanceTo(perceivedVehicle.getPosition());
-//        double perceptionRange = this.getOs().getPerceptionModule().getConfiguration().getViewingRange();
-//
-//        return (distance / perceptionRange) * MAX_COMFORT;
-//    }
-//
-//    public void calculateDirectionBasedComfort(List<VehicleObject> perceivedVehicles) {
-//        Map<String, VehicleUnit> vehicles = UnitSimulator.UnitSimulator.getVehicles();
-//        List<Double> carComfortFactors = new ArrayList<>();
-//        List<Double> bikeComfortFactors = new ArrayList<>();
-//        for (VehicleObject vehicleObject : perceivedVehicles) {
-//            VehicleType vehicleType = vehicles.get(vehicleObject.getId()).getInitialVehicleType();
-//            if (vehicleType.getName().equals("Car")) {
-//                carComfortFactors.add(carDirectionComfort(vehicleObject));
-//            } else if (vehicleType.getName().equals("Bike")) {
-////                bikeComfortFactors.add(bikeDirectionComfort(vehicleObject));
-//            }
-//        }
-//    }
-
-//    public double carDirectionComfort(VehicleObject perceivedVehicle) {
-//        // Return 1 if vehicle is very close and directly in front or behind
-//        // Return 10 if vehicle is very far away
-//        // Possibly check if all vehicles are to the left or right -> This could be because we are on a bike lane -> adjust comfort factor
-//        Vector3d directionVector = new Vector3d(perceivedVehicle.getPosition()).subtract(this.getOs().getPosition().toVector3d());
-//        double distance = this.getOs().getPosition().toVector3d().distanceTo(perceivedVehicle.getPosition());
-//        double angle = new Vector3d(directionVector).angle(VectorUtils.getDirectionVectorFromHeading(Objects.requireNonNull(this.getOs().getVehicleData()).getHeading(), new Vector3d()));
-//
-//        double perceptionRange = this.getOs().getPerceptionModule().getConfiguration().getViewingRange();
-//        // Case perceived vehicle is within 10 degrees in front or behind this unit
-//        if (angle <= 5.0 || angle >= 175) {
-//            double directlyInFrontFactor = 0.5;
-//            return directlyInFrontFactor * (distance / perceptionRange) * MAX_COMFORT;
-//        } else {
-//            return (distance / perceptionRange) * MAX_COMFORT;
-//        }
-//    }
-
-//    public Double bikeDirectionComfort(VehicleObject vehicleObject) {
-//
-//    }
-
     @Override
     public void onShutdown() {
-//        getLog().infoSimTime(this, "Perceived Cars per simulation step: {}", this.perceivedCarsPerStep);
-//        getLog().infoSimTime(this, "Perceived Bikes per simulation step: {}", this.perceivedBikesPerStep);
-//        double averageNumberOfCarsPerStep = (double) perceivedCarsPerStep.stream().mapToInt(Integer::intValue).sum() / perceivedCarsPerStep.size();
-//        double averageNumberOfBikesPerStep = (double) perceivedBikesPerStep.stream().mapToInt(Integer::intValue).sum() / perceivedBikesPerStep.size();
-//        getLog().infoSimTime(this, "Average number of cars per simulation step: {}", averageNumberOfCarsPerStep);
-//        getLog().infoSimTime(this, "Average number of bikes per simulation step: {}", averageNumberOfBikesPerStep);
+        // When this unit leaves the simulation, write all collected data to the output file
         try {
             exportValuesToCsv(values);
         } catch (IOException e) {
@@ -241,8 +220,8 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
     }
 
     public void exportValuesToCsv(List<String[]> valueList) throws IOException {
-
-        try (CSVWriter writer = new CSVWriter(new FileWriter(filename, true))) {
+        // Create a csv writer and append all values for this vehicle to the output file
+        try (CSVWriter writer = new CSVWriter(new FileWriter(outputFile, true))) {
             writer.writeAll(valueList);
         } catch (IOException e) {
             throw new IOException(e);
@@ -256,6 +235,6 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
 
         saveValues(perceivedVehicles);
 
-        getOs().getEventManager().addEvent(new Event(getOs().getSimulationTime() + 10 * TIME.SECOND, this));
+        getOs().getEventManager().addEvent(new Event(getOs().getSimulationTime() + 1 * TIME.SECOND, this));
     }
 }
