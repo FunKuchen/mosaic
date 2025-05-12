@@ -309,8 +309,8 @@ public class SQLiteReader {
                 double length = connectionEntry.getDouble("length");
                 boolean hasBikeLane = false;
                 if (hasBikeLaneColumn) {
-                    connectionEntry.getBoolean("hasBikeLane");
-}
+                    hasBikeLane = connectionEntry.getBoolean("hasBikeLane");
+                }
                 // create object and save to db
                 databaseBuilder.addConnection(id, wayId).setLanes(lanes).setLength(length).setHasBikeLane(hasBikeLane);
             }
