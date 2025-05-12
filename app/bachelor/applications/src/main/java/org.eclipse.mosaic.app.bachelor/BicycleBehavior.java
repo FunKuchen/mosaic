@@ -86,7 +86,7 @@ public class BicycleBehavior {
 //    }
 
     private void initializeBikeLaneFactor(RandomNumberGenerator random) {
-        bikeLaneFactor = random.nextGaussian(0.7, 0.5); // TODO values
+        bikeLaneFactor = random.nextGaussian(0.7, 0.3); // TODO values
     }
 
     private void initializeRiskAversion(RandomNumberGenerator random) {
@@ -96,7 +96,7 @@ public class BicycleBehavior {
     }
 
     /**
-     * Numbers for this distribution are from this paper.
+     * Numbers for this distribution are guesstimated from this paper.
      * <a href="https://www.sciencedirect.com/science/article/pii/S0140366423001342">...</a>
      * @param random A RandomNumberGenerator object
      */
@@ -130,6 +130,8 @@ public class BicycleBehavior {
         }
     }
 
+    //TODO values in gaussian are arbitrary, but kind of based on visuals from paper cited above. Best would be to
+    // implement distributions mentioned above each case
     private void initializeAcceleration(RandomNumberGenerator random) {
         switch (cyclistCategory) {
             case SLOW:
@@ -144,6 +146,8 @@ public class BicycleBehavior {
         }
     }
 
+    //TODO values in gaussian are arbitrary, but kind of based on visuals from paper cited above. Best would be to
+    // implement distributions mentioned above each case
     private void initializeDeceleration(RandomNumberGenerator random) {
         switch (cyclistCategory) {
             case SLOW:

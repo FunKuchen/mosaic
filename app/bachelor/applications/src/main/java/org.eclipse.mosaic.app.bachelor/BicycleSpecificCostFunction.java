@@ -43,7 +43,10 @@ public class BicycleSpecificCostFunction implements RoutingCostFunction {
             {"tertiary_link", 1.0},
             {"unclassified", 1.0},
             {"secondary", 1.2},
+            {"secondary_link", 1.2},
             {"primary", 1.5},
+            {"primary_link", 1.5},
+            {"steps", 2.0},
             {"trunk", 2.0}
     }).collect(Collectors.toMap(data -> (String) data[0], data -> (Double) data[1]));
 
@@ -60,13 +63,13 @@ public class BicycleSpecificCostFunction implements RoutingCostFunction {
 
         switch (edgeProperties.getWayType()) {
             case "cycleway":
-                return edgeProperties.getLength() * (comfortFactors.get("cycleway") * ((10 - behavior.riskAversion) / 10));
+                return edgeProperties.getLength() * ((comfortFactors.get("cycleway") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
             case "footway":
-                return edgeProperties.getLength() * (comfortFactors.get("footway") * ((10 - behavior.riskAversion) / 10));
+                return edgeProperties.getLength() * ((comfortFactors.get("footway") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
             case "path":
-                return edgeProperties.getLength() * (comfortFactors.get("path") * ((10 - behavior.riskAversion) / 10));
+                return edgeProperties.getLength() * ((comfortFactors.get("path") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
             case "pedestrian":
-                return edgeProperties.getLength() * (comfortFactors.get("pedestrian") * ((10 - behavior.riskAversion) / 10));
+                return edgeProperties.getLength() * ((comfortFactors.get("pedestrian") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
             case "living_street":
                 return edgeProperties.getLength() * ((comfortFactors.get("living_street") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
             case "residential":
@@ -79,6 +82,18 @@ public class BicycleSpecificCostFunction implements RoutingCostFunction {
                 return edgeProperties.getLength() * ((comfortFactors.get("tertiary_link") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
             case "unclassified":
                 return edgeProperties.getLength() * ((comfortFactors.get("unclassified") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "secondary":
+                return edgeProperties.getLength() * ((comfortFactors.get("secondary") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "secondary_link":
+                return edgeProperties.getLength() * ((comfortFactors.get("secondary_link") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "primary":
+                return edgeProperties.getLength() * ((comfortFactors.get("primary") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "primary_link":
+                return edgeProperties.getLength() * ((comfortFactors.get("primary_link") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "steps":
+                return edgeProperties.getLength() * ((comfortFactors.get("steps") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
+            case "trunk":
+                return edgeProperties.getLength() * ((comfortFactors.get("trunk") * bikeLaneFactor) * ((10 - behavior.riskAversion) / 10));
             default:
                 return RoutingCostFunction.Shortest.calculateCosts(edgeProperties);
         }
