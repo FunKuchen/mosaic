@@ -13,7 +13,7 @@
  * Contact: mosaic@fokus.fraunhofer.de
  */
 
-package org.eclipse.mosaic.app.bachelor;
+package org.eclipse.mosaic.app.bachelor.utils;
 
 import org.eclipse.mosaic.lib.math.RandomNumberGenerator;
 
@@ -45,14 +45,14 @@ public class BicycleBehavior {
 //    double turnFactor;
 //    double tlFactor;
 
-    speedCategory cyclistCategory;
-    double maxSpeed;
-    double acceleration;
-    double deceleration;
+    private speedCategory cyclistCategory;
+    public double maxSpeed;
+    public double acceleration;
+    public double deceleration;
 
-    double bikeLaneFactor;
-    // A high riskAversion (=10) leads way types having no influence on route finding
-    double riskAversion;
+    protected double bikeLaneFactor;
+    // A high riskAversion (=1) leads way types having no influence on route finding
+    protected double riskAversion;
 
     public BicycleBehavior(RandomNumberGenerator random) {
 //        isCommuter = random.nextDouble() < 0.3;
@@ -86,13 +86,13 @@ public class BicycleBehavior {
 //    }
 
     private void initializeBikeLaneFactor(RandomNumberGenerator random) {
-        bikeLaneFactor = random.nextGaussian(0.7, 0.3); // TODO values
+        double gaussian = random.nextGaussian(0.6, 0.2); // TODO values
+        bikeLaneFactor = Math.max(0, Math.min(gaussian, 1));
     }
 
     private void initializeRiskAversion(RandomNumberGenerator random) {
-        double gaussian = random.nextGaussian(5.5, 1.5);
-        double clamped = Math.max(1, Math.min(gaussian, 10));
-        riskAversion = Math.floor(clamped);
+        double gaussian = random.nextGaussian(0.6, 0.2); // TODO values
+        riskAversion = Math.max(0, Math.min(gaussian, 1));
     }
 
     /**

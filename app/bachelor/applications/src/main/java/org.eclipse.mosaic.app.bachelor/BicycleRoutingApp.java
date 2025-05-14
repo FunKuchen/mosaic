@@ -15,6 +15,10 @@
 
 package org.eclipse.mosaic.app.bachelor;
 
+import org.eclipse.mosaic.app.bachelor.config.CBicycleApplication;
+import org.eclipse.mosaic.app.bachelor.messages.DataMessage;
+import org.eclipse.mosaic.app.bachelor.utils.BicycleBehavior;
+import org.eclipse.mosaic.app.bachelor.utils.BicycleSpecificCostFunction;
 import org.eclipse.mosaic.fed.application.ambassador.UnitSimulator;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.VehicleUnit;
 import org.eclipse.mosaic.fed.application.ambassador.simulation.perception.SimplePerceptionConfiguration;
@@ -26,6 +30,7 @@ import org.eclipse.mosaic.lib.enums.VehicleClass;
 import org.eclipse.mosaic.lib.geo.GeoPoint;
 import org.eclipse.mosaic.lib.math.Vector3d;
 import org.eclipse.mosaic.lib.math.VectorUtils;
+import org.eclipse.mosaic.lib.objects.v2x.MessageRouting;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleData;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleRoute;
 import org.eclipse.mosaic.lib.objects.vehicle.VehicleType;
@@ -33,12 +38,7 @@ import org.eclipse.mosaic.lib.routing.CandidateRoute;
 import org.eclipse.mosaic.lib.routing.RoutingCostFunction;
 import org.eclipse.mosaic.lib.routing.RoutingParameters;
 import org.eclipse.mosaic.lib.util.scheduling.Event;
-import org.eclipse.mosaic.rti.TIME;
 
-import com.opencsv.CSVWriter;
-
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,7 +53,6 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
     private boolean firstUpdate = true;
     private BicycleBehavior behaviorPattern;
 
-    String outputFile;
     private final List<String[]> values = new ArrayList<>();
 
     public BicycleRoutingApp() {
@@ -63,7 +62,6 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
     @Override
     public void onStartup() {
         config = getConfiguration();
-        outputFile = config.outputFile;
         // Create an individual behavior pattern for the unit
         behaviorPattern = new BicycleBehavior(getRandom());
 
@@ -77,11 +75,16 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
         getOs().getPerceptionModule().enable(new SimplePerceptionConfiguration.Builder(360, 25)
                 .build());
 
-        getOs().getEventManager().addEvent(new Event(getOs().getSimulationTime(), this));
+        getOs().getCellModule().enable();
     }
 
     @Override
     public void onVehicleUpdated(@Nullable VehicleData previousVehicleData, @Nonnull VehicleData updatedVehicleData) {
+
+        if (config.saveOutput) {
+            saveValues(getOs().getPerceptionModule().getPerceivedVehicles());
+        }
+
         // We are updating the route here, because in onStartup() the navigation module has not yet received the initial route -> FIXME?
         if (config.calculateRoutes && firstUpdate && updatedVehicleData.getRoadPosition() != null) {
             calculateBicycleRoute(updatedVehicleData);
@@ -211,30 +214,17 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
 
     @Override
     public void onShutdown() {
-        // When this unit leaves the simulation, write all collected data to the output file
-        try {
-            exportValuesToCsv(values);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        // When this unit leaves the simulation, send all collected data to the output server
+        MessageRouting routing = getOs().getCellModule().createMessageRouting().destination("server_0").topological().build();
+        DataMessage message = new DataMessage(routing, values);
+        getOs().getCellModule().sendV2xMessage(message);
+
     }
 
-    public void exportValuesToCsv(List<String[]> valueList) throws IOException {
-        // Create a csv writer and append all values for this vehicle to the output file
-        try (CSVWriter writer = new CSVWriter(new FileWriter(outputFile, true))) {
-            writer.writeAll(valueList);
-        } catch (IOException e) {
-            throw new IOException(e);
-        }
-    }
 
     @Override
     public void processEvent(Event event) throws Exception {
         // Get perceived vehicles around unit to calculate comfort metric
-        List<VehicleObject> perceivedVehicles = getOs().getPerceptionModule().getPerceivedVehicles();
 
-        saveValues(perceivedVehicles);
-
-        getOs().getEventManager().addEvent(new Event(getOs().getSimulationTime() + 1 * TIME.SECOND, this));
     }
 }

@@ -13,16 +13,16 @@
  * Contact: mosaic@fokus.fraunhofer.de
  */
 
-package org.eclipse.mosaic.app.bachelor;
+package org.eclipse.mosaic.app.bachelor.config;
 
 import java.io.Serializable;
 
 public class CBicycleApplication implements Serializable {
     public boolean calculateRoutes;
-    public String outputFile;
+    public boolean saveOutput;
 
     public CBicycleApplication() {
         calculateRoutes = false;
-        outputFile = "Logs/bicycleRoutingAppOutput.csv";
+        saveOutput = false;
     }
 }
