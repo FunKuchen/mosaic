@@ -79,6 +79,7 @@ public class BicycleExportServer extends ConfigurableApplication<CBicycleExportS
             writer.writeAll(writeValues);
             try {
                 writer.flush();
+                writeValues.clear();
             } catch (IOException e) {
                 //
             }

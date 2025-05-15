@@ -218,13 +218,11 @@ public class BicycleRoutingApp extends ConfigurableApplication<CBicycleApplicati
         MessageRouting routing = getOs().getCellModule().createMessageRouting().destination("server_0").topological().build();
         DataMessage message = new DataMessage(routing, values);
         getOs().getCellModule().sendV2xMessage(message);
-
     }
 
 
     @Override
     public void processEvent(Event event) throws Exception {
         // Get perceived vehicles around unit to calculate comfort metric
-
     }
 }
