@@ -18,11 +18,25 @@ package org.eclipse.mosaic.app.bachelor.config;
 import java.io.Serializable;
 
 public class CBicycleApplication implements Serializable {
+    /**
+     * Whether to calculate a new route in the 'BicycleRoutingApp'.
+     */
     public boolean calculateRoutes;
+    /**
+     * Whether to save the output in a CSV file.
+     */
     public boolean saveOutput;
+    /**
+     * Name of the CSV output file. Should end with .csv.gz
+     */
+    public String outputFile;
 
+    /**
+     * Constructor for this configuration class with default values.
+     */
     public CBicycleApplication() {
         calculateRoutes = false;
         saveOutput = false;
+        outputFile = "BicycleRoutingAppOutput.csv.gz";
     }
 }
